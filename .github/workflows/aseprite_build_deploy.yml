@@ -25,6 +25,7 @@ jobs:
         data=$(curl -sL https://api.github.com/repos/aseprite/aseprite/releases/latest)
         LATEST_TAG=$(echo "${data}" | jq -r '.tag_name')
         DOWNLOAD_URL=$(echo "${data}" | jq -r '.assets[].browser_download_url')
+        
         echo "latest_tag=${LATEST_TAG}" >> $GITHUB_OUTPUT
         echo "download_url=${DOWNLOAD_URL}" >> $GITHUB_OUTPUT
         echo "${LATEST_TAG}" > ${LATEST_TAG}.txt
@@ -63,12 +64,17 @@ jobs:
           curl -o Aseprite-source.zip -L ${{ needs.check-version.outputs.download_url }}
           unzip Aseprite-source.zip -d aseprite
           mkdir aseprite\build
-      - name: (Windows) Run CMake
+      - name: Run CMake
         working-directory: aseprite/build
         shell: cmd
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat" -arch=x64
-          cmake -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DLAF_BACKEND=skia -DSKIA_DIR=../../skia -DSKIA_LIBRARY_DIR=../../skia/out/Release-x64 -G Ninja ..
+          cmake -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} ^
+            -DLAF_BACKEND=skia ^
+            -DSKIA_DIR=%GITHUB_WORKSPACE%\skia ^
+            -DSKIA_LIBRARY_DIR=%GITHUB_WORKSPACE%\skia\out\Release-x64 ^
+            -DSKIA_LIBRARY=%GITHUB_WORKSPACE%\skia\out\Release-x64\skia.lib ^
+            -G Ninja ..
       - name: Run Ninja
         working-directory: aseprite/build
         run: |
