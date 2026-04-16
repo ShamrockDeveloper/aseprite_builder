@@ -25,14 +25,9 @@ jobs:
         data=$(curl -sL https://api.github.com/repos/aseprite/aseprite/releases/latest)
         LATEST_TAG=$(echo "${data}" | jq -r '.tag_name')
         DOWNLOAD_URL=$(echo "${data}" | jq -r '.assets[].browser_download_url')
-        VERSION_INFO=$(echo "${data}" | jq -r '.body')
-        
-        echo "${LATEST_TAG}" > ${LATEST_TAG}.txt
         echo "latest_tag=${LATEST_TAG}" >> $GITHUB_OUTPUT
         echo "download_url=${DOWNLOAD_URL}" >> $GITHUB_OUTPUT
-        echo "version_info<<EOF" >> $GITHUB_OUTPUT
-        echo "${VERSION_INFO}" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+        echo "${LATEST_TAG}" > ${LATEST_TAG}.txt
     - name: Load version from cache
       id: version_check
       uses: actions/cache@v4
@@ -47,7 +42,7 @@ jobs:
   build-aseprite:
     name: Build Aseprite
     needs: check-version
-    if: ${{ needs.check-version.outputs.should_build }}
+    if: ${{ needs.check-version.outputs.should_build == 'true' }}
     runs-on: windows-latest
     steps:
       - name: Install Ninja
@@ -72,19 +67,17 @@ jobs:
         working-directory: aseprite/build
         shell: cmd
         run: cmake -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DLAF_BACKEND=skia -DSKIA_DIR=../../skia -DSKIA_LIBRARY_DIR=../../skia/out/Release-x64 -G Ninja ..
-     -  name: Run Ninja
+      - name: Run Ninja
         working-directory: aseprite/build
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat" -arch=x64
           ninja aseprite
-        working-directory: aseprite/build
-        run: ninja aseprite
       - name: Create Portable Zip
         working-directory: aseprite/build/bin
         run: |
           echo # Portable > aseprite.ini
           7z a Aseprite-${{ needs.check-version.outputs.latest_tag }}-Windows.zip *
-      - name: Create Release and Upload
+      - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.check-version.outputs.latest_tag }}
