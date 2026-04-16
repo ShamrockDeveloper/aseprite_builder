@@ -51,7 +51,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Install Ninja
-        uses: HomemadeToast57/setup-ninja@v1.0.0
+        uses: HomemadeToast57/setup-ninja@v1.1.2
       - name: Get Skia from cache
         id: skia-cache
         uses: actions/cache@v4
