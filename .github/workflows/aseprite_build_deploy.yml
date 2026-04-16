@@ -95,7 +95,7 @@ jobs:
           echo # Portable > aseprite.ini
           7z a Aseprite-${{ needs.check-version.outputs.latest_tag }}-Windows.zip *
 
-      - name: Create Draft Release
+      - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.check-version.outputs.latest_tag }}
