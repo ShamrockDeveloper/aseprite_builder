@@ -47,22 +47,28 @@ jobs:
     steps:
       - name: Install Ninja
         uses: ashutoshvarma/setup-ninja@master
+
       - name: Get Skia from cache
         id: skia-cache
         uses: actions/cache@v4
         with:
           path: skia
           key: skia-windows-cache
+
       - name: Download Skia if not in cache
         if: steps.skia-cache.outputs.cache-hit != 'true'
+        shell: cmd
         run: |
           curl -o Skia-Windows-Release-X64.zip -L https://github.com/aseprite/skia/releases/download/m81-b607b32047/Skia-Windows-Release-X64.zip
           7z x Skia-Windows-Release-X64.zip -oskia
+
       - name: Download Aseprite source
+        shell: cmd
         run: |
           curl -o Aseprite-source.zip -L ${{ needs.check-version.outputs.download_url }}
           7z x Aseprite-source.zip -oaseprite
           if not exist aseprite\build mkdir aseprite\build
+
       - name: Run CMake
         working-directory: aseprite/build
         shell: cmd
@@ -74,17 +80,21 @@ jobs:
             -DSKIA_LIBRARY_DIR=%GITHUB_WORKSPACE%\skia\out\Release-x64 ^
             -DSKIA_LIBRARY=%GITHUB_WORKSPACE%\skia\out\Release-x64\skia.lib ^
             -G Ninja ..
+
       - name: Run Ninja
         working-directory: aseprite/build
         shell: cmd
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=x64
           ninja aseprite
+
       - name: Create Portable Zip
         working-directory: aseprite/build/bin
+        shell: cmd
         run: |
           echo # Portable > aseprite.ini
           7z a Aseprite-${{ needs.check-version.outputs.latest_tag }}-Windows.zip *
+
       - name: Create Draft Release
         uses: softprops/action-gh-release@v2
         with:
