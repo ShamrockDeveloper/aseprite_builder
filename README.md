@@ -44,3 +44,6 @@ That is why we recommend you to modify the **os** line to only build for the OS 
 Keep supporting Aseprite at https://aseprite.org/#buy
 
 
+
+
+
